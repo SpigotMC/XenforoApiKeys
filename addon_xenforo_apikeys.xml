@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<addon addon_id="xenforo_api_keys" title="Xenforo API Keys" version_string="0.0.1" version_id="1" url="https://spigotmc.org/" install_callback_class="XenforoApiKeys_Install_Base" install_callback_method="install" uninstall_callback_class="XenforoApiKeys_Install_Base" uninstall_callback_method="uninstall">
+  <admin_navigation/>
+  <admin_permissions/>
+  <admin_style_properties/>
+  <admin_templates/>
+  <code_events/>
+  <code_event_listeners>
+    <listener event_id="template_hook" execute_order="10" callback_class="XenforoApiKeys_Hooks_AccountWrapperSidebarSettings" callback_method="template_hook" active="1" hint="" description="Add user settings option for API Key management"/>
+  </code_event_listeners>
+  <cron/>
+  <email_templates/>
+  <optiongroups/>
+  <permissions>
+    <permission_groups>
+      <permission_group permission_group_id="xenforo_api_keys"/>
+    </permission_groups>
+    <permissions>
+      <permission permission_group_id="xenforo_api_keys" permission_id="obtain_api_key" permission_type="flag" default_value="unset" interface_group_id="xenforo_api_keys" display_order="1"/>
+    </permissions>
+    <interface_groups>
+      <interface_group interface_group_id="xenforo_api_keys" display_order="99999"/>
+    </interface_groups>
+  </permissions>
+  <phrases>
+    <phrase title="xenforo_api_keys_api_key" global_cache="0" version_id="1" version_string="0.0.1"><![CDATA[API Key]]></phrase>
+    <phrase title="permission_interface_xenforo_api_keys" global_cache="0" version_id="1" version_string="0.0.1"><![CDATA[Xenforo API Keys]]></phrase>
+    <phrase title="permission_xenforo_api_keys_obtain_api_key" global_cache="0" version_id="1" version_string="0.0.1"><![CDATA[Obtain API Key]]></phrase>
+  </phrases>
+  <route_prefixes>
+    <route_type type="public">
+      <prefix original_prefix="api-keys" class="XenforoApiKeys_Route_Prefix_Index" build_link="data_only"/>
+    </route_type>
+  </route_prefixes>
+  <style_properties/>
+  <templates>
+    <template title="account_api_key" version_id="1" version_string="0.0.1"><![CDATA[<xen:title>{xen:phrase xenforo_api_keys_api_key}</xen:title>
+
+<xen:require css="account.css" />
+<xen:require css="xak.css" />
+
+<div class="xak_key_details">
+    <div class="inner margin-top-separator">
+        <h1>API Key</h1>
+        <p class="subtitle">An API key lets you access certain parts of this website programmatically (i.e., using code.) If you aren't a programmer, this will not be useful for you.</p>
+        <div class="main_content margin-top-separator">
+            <xen:if is="{$can_have_api_key}">
+    	        <xen:if is="{$has_api_key}">
+    	            <p>You have an API key:</p>
+    	            <div style="display:flex">
+    	                <input type="text" style="flex-grow:1" value="{$api_key}" disabled />
+    	            </div>
+    	            <p class="margin-top-separator">If you need to, you can invalidate this key and generate a new one:</p>
+    	            <p class="subtitle"><strong>Note: If you do this, anything using this key <span class="text-style:underline">will break</span></strong>. You will need to update your applications to use the new key. Click with caution.</p>
+                    <form action="{xen:link api-keys/rotate-key}" method="post" class="margin-top-separator">
+                        <dl>
+                            <dt></dt>
+                            <dd><input type="submit" value="Invalidate My Current Key and Get a New One" class="button primary" accesskey="s" /></dd>
+                        </dl>
+                        <input type="hidden" name="date" value="{$date}" />
+                        <input type="hidden" name="_xfToken" value="{$visitor.csrf_token_page}" />
+                    </form>
+                    <p class="margin-top-separator">Alternatively, if you no longer want an API key, you may delete your key:</p>
+                    <p class="subtitle"><strong>Note: As before, if you do this, anything using this key <span class="text-style:underline">will break</span></strong>. Click with caution.</p>
+                    <form action="{xen:link api-keys/delete-key}" method="post" class="margin-top-separator">
+                        <dl>
+                            <dt></dt>
+                            <dd><input type="submit" value="Delete my API Key" class="button primary" accesskey="s" /></dd>
+                        </dl>
+                        <input type="hidden" name="date" value="{$date}" />
+                        <input type="hidden" name="_xfToken" value="{$visitor.csrf_token_page}" />
+                    </form>
+                <xen:else />
+                    <p>You are allowed to have an API key, but don't have one yet.</p>
+                    <form action="{xen:link api-keys/create-key}" method="post" class="margin-top-separator">
+                        <dl>
+                            <dt></dt>
+                            <dd><input type="submit" value="Generate My Key" class="button primary" accesskey="s" /></dd>
+                        </dl>
+                        <input type="hidden" name="date" value="{$date}" />
+                        <input type="hidden" name="_xfToken" value="{$visitor.csrf_token_page}" />
+                    </form>
+                </xen:if>
+            <xen:else />
+    	        <p>You are not permitted to have an API key.</p>
+            </xen:if>
+        </div>
+    </div>
+</div>]]></template>
+    <template title="account_wrapper_sidebar_api_key" version_id="1" version_string="0.0.1"><![CDATA[<li>
+    <a class="{xen:if '{$selectedKey} == "account/api-keys"', 'secondaryContent', 'primaryContent'}" href="{xen:link api-keys/index}">
+        {xen:phrase xenforo_api_keys_api_key}
+    </a>
+</li>]]></template>
+    <template title="xak.css" version_id="1" version_string="0.0.1"><![CDATA[.xak_key_details {
+    display: flex;
+    justify-content: center;
+}
+
+.xak_key_details .margin-top-separator {
+    margin-top: 0.5em;
+}
+
+.xak_key_details strong {
+    font-weight: bold;
+}
+
+.xak_key_details .inner h1 {
+    font-size: 2em;
+    font-weight: bold;
+}
+
+.xak_key_details .inner p.subtitle {
+    font-size: 1em;
+    opacity: 0.85;
+}]]></template>
+  </templates>
+</addon>
