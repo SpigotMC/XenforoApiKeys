@@ -2,12 +2,22 @@
 
 class XenforoApiKeys_ControllerPublic_Index extends XenForo_ControllerPublic_Abstract {
     public function actionIndex() {
-        $apiKeyModel = $this->_getApiKeyModel();
+        $user = XenForo_Visitor::getInstance();
+        if (!$this->_doesUserExist($user['user_id'])) {
+          return $this->responseError(
+            "You must be logged in to perform that action.",
+            401
+          );
+        }
 
-        $apiKey = $apiKeyModel->getApiKeyForUser(XenForo_Visitor::getUserId());
+        $apiKey = $this->_getApiKeyModel()->getApiKeyForUser($user['user_id']);
+
+        $perm_set = $user['permissions'];
 
         $viewParams = [
-            'can_have_api_key' => XenForo_Permission::hasPermission(XenForo_Visitor::getInstance()["permissions"], "xenforo_api_keys", "obtain_api_key"),
+            'can_have_api_key' => $this->_checkPermission($perm_set, 'obtain_api_key'),
+            'can_rotate_api_key' => $this->_checkPermission($perm_set, 'rotate_api_key'),
+            'can_delete_api_key' => $this->_checkPermission($perm_set, 'delete_api_key'),
             'has_api_key' => $apiKey['key'] !== NULL,
             'api_key' => $apiKey['key']
         ];
@@ -24,8 +34,22 @@ class XenforoApiKeys_ControllerPublic_Index extends XenForo_ControllerPublic_Abs
 
     public function actionCreateKey() {
         $this->_assertPostOnly();
+        $this->_checkCsrf('createKey');
 
         $user = XenForo_Visitor::getInstance();
+        if (!$this->_doesUserExist($user['user_id'])) {
+          return $this->responseError(
+            "You must be logged in to perform that action.",
+            401
+          );
+        }
+
+        if (!$this->_checkPermission($user["permissions"], "obtain_api_key")) {
+          return $this->responseError(
+            "You are not permitted to create an API key.",
+            401
+          );
+        }
 
         $writer = XenForo_DataWriter::create("XenforoApiKeys_DataWriter_ApiKey");
         $writer->set('user_id', $user['user_id']);
@@ -45,8 +69,22 @@ class XenforoApiKeys_ControllerPublic_Index extends XenForo_ControllerPublic_Abs
 
     public function actionRotateKey() {
         $this->_assertPostOnly();
+        $this->_checkCsrf('rotateKey');
 
         $user = XenForo_Visitor::getInstance();
+        if (!$this->_doesUserExist($user['user_id'])) {
+          return $this->responseError(
+            "You must be logged in to perform that action.",
+            401
+          );
+        }
+
+        if (!$this->_checkPermission($user["permissions"], "rotate_api_key")) {
+          return $this->responseError(
+            "You are not permitted to rotate your API key.",
+            401
+          );
+        }
 
         $writer = XenForo_DataWriter::create("XenforoApiKeys_DataWriter_ApiKey");
         $writer->setExistingData($user['user_id'], true);
@@ -66,8 +104,22 @@ class XenforoApiKeys_ControllerPublic_Index extends XenForo_ControllerPublic_Abs
 
     public function actionDeleteKey() {
         $this->_assertPostOnly();
+        $this->_checkCsrf('deleteKey');
 
         $user = XenForo_Visitor::getInstance();
+        if (!$this->_doesUserExist($user['user_id'])) {
+          return $this->responseError(
+            "You must be logged in to perform that action.",
+            401
+          );
+        }
+
+        if (!$this->_checkPermission($user["permissions"], "delete_api_key")) {
+          return $this->responseError(
+            "You are not permitted to delete your API key.",
+            401
+          );
+        }
 
         $writer = XenForo_DataWriter::create("XenforoApiKeys_DataWriter_ApiKey");
         $writer->setExistingData($user['user_id'], true);
@@ -86,5 +138,13 @@ class XenforoApiKeys_ControllerPublic_Index extends XenForo_ControllerPublic_Abs
 
     protected function _getApiKeyModel() {
         return $this->getModelFromCache('XenforoApiKeys_Model_ApiKey');
+    }
+
+    protected function _doesUserExist($user_id) {
+      return $this->getModelFromCache('XenForo_Model_User')->getUserById($user_id) !== false;
+    }
+
+    protected function _checkPermission($perm_set, $perm) {
+      return XenForo_Permission::hasPermission($perm_set, "xenforo_api_keys", $perm);
     }
 }
