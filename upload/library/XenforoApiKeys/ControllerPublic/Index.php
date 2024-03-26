@@ -29,7 +29,7 @@ class XenforoApiKeys_ControllerPublic_Index extends XenForo_ControllerPublic_Abs
 
         $writer = XenForo_DataWriter::create("XenforoApiKeys_DataWriter_ApiKey");
         $writer->set('user_id', $user['user_id']);
-        $writer->set('key', $this->_getApiKeyModel()->generateKey($user));
+        $writer->set('key', $this->_getApiKeyModel()->generateKey());
         $writer->save();
 
         if ($this->_noRedirect()) {
@@ -50,7 +50,7 @@ class XenforoApiKeys_ControllerPublic_Index extends XenForo_ControllerPublic_Abs
 
         $writer = XenForo_DataWriter::create("XenforoApiKeys_DataWriter_ApiKey");
         $writer->setExistingData($user['user_id'], true);
-        $writer->set('key', $this->_getApiKeyModel()->generateKey($user));
+        $writer->set('key', $this->_getApiKeyModel()->generateKey());
         $writer->save();
 
         if ($this->_noRedirect()) {
