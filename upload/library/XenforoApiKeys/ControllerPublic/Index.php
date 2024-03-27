@@ -1,7 +1,9 @@
 <?php
 
-class XenforoApiKeys_ControllerPublic_Index extends XenForo_ControllerPublic_Abstract {
-    public function actionIndex() {
+class XenforoApiKeys_ControllerPublic_Index extends XenForo_ControllerPublic_Abstract
+{
+    public function actionIndex()
+    {
         $apiKeyModel = $this->_getApiKeyModel();
 
         $apiKey = $apiKeyModel->getApiKeyForUser(XenForo_Visitor::getUserId());
@@ -11,9 +13,10 @@ class XenforoApiKeys_ControllerPublic_Index extends XenForo_ControllerPublic_Abs
             'has_api_key' => $apiKey['key'] !== NULL,
             'api_key' => $apiKey['key']
         ];
-        
+
         return $this->getHelper('Account')->getWrapper(
-            'account', 'api-keys',
+            'account',
+            'api-keys',
             $this->responseView(
                 'XenforoApiKeys_ViewPublic_Index',
                 'account_api_key',
@@ -22,7 +25,8 @@ class XenforoApiKeys_ControllerPublic_Index extends XenForo_ControllerPublic_Abs
         );
     }
 
-    public function actionCreateKey() {
+    public function actionCreateKey()
+    {
         $this->_assertPostOnly();
 
         $user = XenForo_Visitor::getInstance();
@@ -40,10 +44,11 @@ class XenforoApiKeys_ControllerPublic_Index extends XenForo_ControllerPublic_Abs
             XenForo_ControllerResponse_Redirect::SUCCESS,
             XenForo_Link::buildPublicLink('api-keys'),
             "Your API key has been created."
-        ); 
+        );
     }
 
-    public function actionRotateKey() {
+    public function actionRotateKey()
+    {
         $this->_assertPostOnly();
 
         $user = XenForo_Visitor::getInstance();
@@ -64,7 +69,8 @@ class XenforoApiKeys_ControllerPublic_Index extends XenForo_ControllerPublic_Abs
         );
     }
 
-    public function actionDeleteKey() {
+    public function actionDeleteKey()
+    {
         $this->_assertPostOnly();
 
         $user = XenForo_Visitor::getInstance();
@@ -84,7 +90,8 @@ class XenforoApiKeys_ControllerPublic_Index extends XenForo_ControllerPublic_Abs
         );
     }
 
-    protected function _getApiKeyModel() {
+    protected function _getApiKeyModel()
+    {
         return $this->getModelFromCache('XenforoApiKeys_Model_ApiKey');
     }
 }
