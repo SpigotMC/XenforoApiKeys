@@ -1,7 +1,9 @@
 <?php
 
-class XenforoApiKeys_Install_Base {
-    public static function install($previous) {
+class XenforoApiKeys_Install_Base
+{
+    public static function install($previous)
+    {
         $db = Xenforo_Application::getDb();
 
         $db->query("
@@ -12,7 +14,8 @@ class XenforoApiKeys_Install_Base {
         ");
     }
 
-    public static function uninstall() {
+    public static function uninstall()
+    {
         Xenforo_Application::getDb()->query("DROP TABLE IF EXISTS `xf_api_keys`");
     }
 }

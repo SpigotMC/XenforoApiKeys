@@ -1,7 +1,9 @@
 <?php
 
-class XenforoApiKeys_DataWriter_ApiKey extends XenForo_DataWriter {
-    protected function _getFields() {
+class XenforoApiKeys_DataWriter_ApiKey extends XenForo_DataWriter
+{
+    protected function _getFields()
+    {
         return array(
             'xf_api_keys' => array(
                 'user_id' => array('type' => self::TYPE_UINT, 'required' => true),
@@ -10,7 +12,8 @@ class XenforoApiKeys_DataWriter_ApiKey extends XenForo_DataWriter {
         );
     }
 
-    protected function _getExistingData($data) {
+    protected function _getExistingData($data)
+    {
         if (!$userId = $this->_getExistingPrimaryKey($data, 'user_id')) {
             return false;
         }
@@ -18,7 +21,8 @@ class XenforoApiKeys_DataWriter_ApiKey extends XenForo_DataWriter {
         return array('xf_api_keys' => $this->getModelFromCache('XenforoApiKeys_Model_ApiKey')->getApiKeyForUser($userId));
     }
 
-    protected function _getUpdateCondition($tableName) {
+    protected function _getUpdateCondition($tableName)
+    {
         return 'user_id = ' . $this->_db->quote($this->getExisting('user_id'));
     }
 }
