@@ -4,10 +4,7 @@ class XenforoApiKeys_ControllerPublic_Index extends XenForo_ControllerPublic_Abs
     public function actionIndex() {
         $user = XenForo_Visitor::getInstance();
         if (!$this->_doesUserExist($user['user_id'])) {
-          return $this->responseError(
-            "You must be logged in to perform that action.",
-            401
-          );
+          return $this->responseNoPermission();
         }
 
         $apiKey = $this->_getApiKeyModel()->getApiKeyForUser($user['user_id']);
@@ -38,17 +35,11 @@ class XenforoApiKeys_ControllerPublic_Index extends XenForo_ControllerPublic_Abs
 
         $user = XenForo_Visitor::getInstance();
         if (!$this->_doesUserExist($user['user_id'])) {
-          return $this->responseError(
-            "You must be logged in to perform that action.",
-            401
-          );
+          return $this->responseNoPermission();
         }
 
         if (!$this->_checkPermission($user["permissions"], "obtain_api_key")) {
-          return $this->responseError(
-            "You are not permitted to create an API key.",
-            401
-          );
+          return $this->responseNoPermission();
         }
 
         $writer = XenForo_DataWriter::create("XenforoApiKeys_DataWriter_ApiKey");
@@ -73,17 +64,11 @@ class XenforoApiKeys_ControllerPublic_Index extends XenForo_ControllerPublic_Abs
 
         $user = XenForo_Visitor::getInstance();
         if (!$this->_doesUserExist($user['user_id'])) {
-          return $this->responseError(
-            "You must be logged in to perform that action.",
-            401
-          );
+          return $this->responseNoPermission();
         }
 
         if (!$this->_checkPermission($user["permissions"], "rotate_api_key")) {
-          return $this->responseError(
-            "You are not permitted to rotate your API key.",
-            401
-          );
+          return $this->responseNoPermission();
         }
 
         $writer = XenForo_DataWriter::create("XenforoApiKeys_DataWriter_ApiKey");
@@ -108,17 +93,11 @@ class XenforoApiKeys_ControllerPublic_Index extends XenForo_ControllerPublic_Abs
 
         $user = XenForo_Visitor::getInstance();
         if (!$this->_doesUserExist($user['user_id'])) {
-          return $this->responseError(
-            "You must be logged in to perform that action.",
-            401
-          );
+          return $this->responseNoPermission();
         }
 
         if (!$this->_checkPermission($user["permissions"], "delete_api_key")) {
-          return $this->responseError(
-            "You are not permitted to delete your API key.",
-            401
-          );
+          return $this->responseNoPermission();
         }
 
         $writer = XenForo_DataWriter::create("XenforoApiKeys_DataWriter_ApiKey");
