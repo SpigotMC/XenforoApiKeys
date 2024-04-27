@@ -8,9 +8,9 @@ class XenforoApiKeys_ControllerAdmin_ActiveApiKeys extends XenForo_ControllerAdm
   }
 
   protected function _filterActiveApiKeySearchCriteria(array $criteria)
-	{
-		return $this->_getCriteriaHelper()->filterActiveApiKeySearchCriteria($criteria);
-	}
+  {
+    return $this->_getCriteriaHelper()->filterActiveApiKeySearchCriteria($criteria);
+  }
 
   protected function _prepareActiveApiKeySearchCriteria(array $criteria)
   {
@@ -55,7 +55,7 @@ class XenforoApiKeys_ControllerAdmin_ActiveApiKeys extends XenForo_ControllerAdm
     $criteriaPrepared = $this->_prepareActiveApiKeySearchCriteria($criteria);
 
     $totalUsers = $apiKeyModel->countUsersWithApiKeys($criteriaPrepared);
-    if (!$totalUsers) {
+    if (!$totalUsers && $filterView) {
       return $this->responseError(new XenForo_Phrase('no_users_matched_specified_criteria'));
     }
 
@@ -75,7 +75,71 @@ class XenforoApiKeys_ControllerAdmin_ActiveApiKeys extends XenForo_ControllerAdm
       'filterMore' => ($filterView && $totalUsers > $usersPerPage)
     );
 
-    return $this->responseView('XenforoApiKeys_ViewAdmin_ActiveApiKeys', 'active_api_keys', $viewParams);
+    return $this->responseView('XenforoApiKeys_ViewAdmin_ApiKeyList', 'api_key_list', $viewParams);
+  }
+
+  public function actionDelete()
+  {
+    $userId = $this->_input->filterSingle('user_id', XenForo_Input::UINT);
+    $user = $this->_getUserOrError($userId); // will stop execution if user does not exist
+
+    $writer = XenForo_DataWriter::create("XenforoApiKeys_DataWriter_ApiKey");
+    $writer->setExistingData($userId);
+
+    $writer->preDelete();
+    if ($writer->hasErrors()) {
+      return $this->responseError($writer->getErrors());
+    }
+
+    if ($this->isConfirmedPost()) {
+      return $this->_deleteData(
+        'XenforoApiKeys_DataWriter_ApiKey',
+        'user_id',
+        XenForo_Link::buildAdminLink('active-api-keys')
+      );
+    } else {
+      $viewParams = array(
+        'user' => $user
+      );
+
+      return $this->responseView('XenforoApiKeys_ViewAdmin_ApiKeyDelete', 'api_key_delete', $viewParams);
+    }
+  }
+
+  public function actionRotate()
+  {
+    $userId = $this->_input->filterSingle('user_id', XenForo_Input::UINT);
+    $user = $this->_getUserOrError($userId); // will stop execution if user does not exist
+
+    if ($this->isConfirmedPost()) {
+      $writer = XenForo_DataWriter::create("XenforoApiKeys_DataWriter_ApiKey");
+      $writer->setExistingData($userId);
+      $writer->set('key', $this->_getApiKeyModel()->generateKey());
+      $writer->save();
+
+      return $this->responseRedirect(
+        XenForo_ControllerResponse_Redirect::SUCCESS,
+        XenForo_Link::buildAdminLink('active-api-keys')
+      );
+    } else {
+      $viewParams = array(
+        'user' => $user
+      );
+
+      return $this->responseView('XenforoApiKeys_ViewAdmin_ApiKeyRotate', 'api_key_rotate', $viewParams);
+    }
+  }
+
+  protected function _getUserOrError($id)
+  {
+    $userModel = $this->_getUserModel();
+
+    return $this->getRecordOrError(
+      $id,
+      $userModel,
+      'getFullUserById',
+      'requested_user_not_found'
+    );
   }
 
   protected function _getApiKeyModel()
@@ -83,9 +147,11 @@ class XenforoApiKeys_ControllerAdmin_ActiveApiKeys extends XenForo_ControllerAdm
     return $this->getModelFromCache('XenforoApiKeys_Model_ApiKey');
   }
 
-  /**
-   * @return XenforoApiKeys_ControllerHelper_ActiveApiKeysCriteria
-   */
+  protected function _getUserModel()
+  {
+    return $this->getModelFromCache('XenForo_Model_User');
+  }
+
   protected function _getCriteriaHelper()
   {
     return $this->getHelper('XenforoApiKeys_ControllerHelper_ActiveApiKeysCriteria');

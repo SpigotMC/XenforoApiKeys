@@ -2,17 +2,15 @@
 class XenforoApiKeys_ControllerHelper_ActiveApiKeysCriteria extends XenForo_ControllerHelper_Abstract
 {
   public function filterActiveApiKeySearchCriteria(array $criteria)
-	{
-		foreach ($criteria AS $key => $value)
-		{
-			if ($value === '')
-			{
-				unset($criteria[$key]);
-			}
-		}
+  {
+    foreach ($criteria as $key => $value) {
+      if ($value === '') {
+        unset($criteria[$key]);
+      }
+    }
 
-		return $criteria;
-	}
+    return $criteria;
+  }
 
   public function prepareActiveApiKeySearchCriteria(array $criteria)
   {
