@@ -1,56 +1,158 @@
 <?xml version="1.0" encoding="utf-8"?>
 <addon addon_id="xenforo_api_keys" title="Xenforo API Keys" version_string="0.0.1" version_id="1" url="https://spigotmc.org/" install_callback_class="XenforoApiKeys_Install_Base" install_callback_method="install" uninstall_callback_class="XenforoApiKeys_Install_Base" uninstall_callback_method="uninstall">
-    <admin_navigation/>
-    <admin_permissions/>
-    <admin_style_properties/>
-    <admin_templates/>
-    <code_events/>
-    <code_event_listeners>
-        <listener event_id="template_hook" execute_order="10" callback_class="XenforoApiKeys_Hooks_AccountWrapperSidebarSettings" callback_method="template_hook" active="1" hint="" description="Add user settings option for API Key management"/>
-    </code_event_listeners>
-    <cron/>
-    <email_templates/>
-    <optiongroups/>
+  <admin_navigation>
+    <navigation navigation_id="api_keys" parent_navigation_id="applications" display_order="99999" link="" admin_permission_id="manage_api_keys" debug_only="0" hide_no_children="0"/>
+    <navigation navigation_id="api_keys_active_keys" parent_navigation_id="api_keys" display_order="1" link="active-api-keys" admin_permission_id="manage_api_keys" debug_only="0" hide_no_children="0"/>
+  </admin_navigation>
+  <admin_permissions>
+    <admin_permission admin_permission_id="manage_api_keys" display_order="99999"/>
+  </admin_permissions>
+  <admin_style_properties/>
+  <admin_templates>
+    <template title="api_key_delete"><![CDATA[<xen:title>{xen:phrase xenforo_api_keys_admin_confirm_key_deletion_for}{$user.username}</xen:title>
+<xen:h1>{xen:phrase xenforo_api_keys_admin_confirm_key_deletion_for}{$user.username}</xen:h1>
+
+<xen:navigation>
+	<xen:breadcrumb href="{xen:adminlink 'active-api-keys/delete', $user}">{xen:phrase xenforo_api_keys_admin_delete_key_for}{$user.username}</xen:breadcrumb>
+</xen:navigation>
+
+<xen:require css="public:delete_confirmation.css" />
+
+<xen:form action="{xen:adminlink 'active-api-keys/delete', $user}" class="deleteConfirmForm formOverlay">
+	<p>{xen:phrase xenforo_api_keys_admin_please_confirm_want_to_delete_key_for}</p>
+	<strong><a href="{xen:adminlink 'users/edit', $user}">{$user.username}</a></strong>
+
+	<p>{xen:phrase xenforo_api_keys_admin_this_action_will_break_applications}</p>
+
+	<xen:submitunit save="{xen:phrase xenforo_api_keys_admin_delete_key}" />
+	<input type="hidden" name="_xfConfirm" value="1" />
+</xen:form>]]></template>
+    <template title="api_key_list"><![CDATA[<xen:title>{xen:phrase xenforo_api_keys_active_api_keys}</xen:title>
+
+<xen:require css="filter_list.css" />
+<xen:require js="js/xenforo/filter_list.js" />
+
+<xen:form action="{xen:adminlink active-api-keys, '', '_params={$linkParams}'}" class="section">
+	<h2 class="subHeading">
+		<xen:include template="filter_list_controls" />
+		{xen:phrase xenforo_api_keys_active_api_keys}
+	</h2>
+	<ol class="FilterList Scrollable" data-ajaxfilter="true">
+		<xen:include template="api_key_list_item" />
+	</ol>
+	<p class="sectionFooter">
+		<xen:if is="{$showAll}">
+			<a href="{xen:adminlink active-api-keys, '', '_params={$linkParams}', 'all=1'}" class="left">{xen:phrase show_all_matches}</a>
+		</xen:if>
+		{xen:phrase showing_x_of_y_items, 'count=<span class="FilterListCount">{xen:count $users}</span>', 'total={xen:number $totalUsers}'}
+	</p>
+	<input type="hidden" name="_xfConfirm" value="1" />
+</xen:form>
+
+<xen:if is="!{$showingAll}">
+	{xen:adminpagenav $usersPerPage, $totalUsers, $page, active-api-keys, '', '_params={$linkParams}'}
+</xen:if>]]></template>
+    <template title="api_key_list_item"><![CDATA[<xen:foreach loop="$users" value="$user">
+	<xen:listitem
+		id="{$user.user_id}"
+		label="{$user.username}"
+		snippet="{$user.key}"
+		href="{xen:adminlink 'users/edit', $user}"
+		delete="{xen:adminlink 'active-api-keys/delete', $user}">
+		<xen:beforelabel>
+			<img src="{xen:helper avatar, $user, s}" alt="" class="listAvatar" />
+		</xen:beforelabel>
+		<xen:html>
+			<a href="{xen:adminlink 'active-api-keys/rotate', $user}" class="secondaryContent OverlayTrigger liftCtrl hiddenMediumUnder">{xen:phrase xenforo_api_keys_admin_rotate_key}</a>
+		</xen:html>
+	</xen:listitem>
+</xen:foreach>
+
+<xen:if is="{$filterMore}">
+	<li class="listNote">{xen:phrase more_records_matching_filter_more_specific}</li>
+</xen:if>]]></template>
+    <template title="api_key_rotate"><![CDATA[<xen:title>{xen:phrase xenforo_api_keys_admin_confirm_key_rotation_for}${user.username}</xen:title>
+<xen:h1>{xen:phrase xenforo_api_keys_admin_confirm_key_rotation_for}{$user.username}</xen:h1>
+
+<xen:navigation>
+	<xen:breadcrumb href="{xen:adminlink 'active-api-keys/rotate', $user}">{xen:phrase xenforo_api_keys_admin_rotate_key_for}{$user.username}</xen:breadcrumb>
+</xen:navigation>
+
+<xen:require css="public:delete_confirmation.css" /> <!-- for some styling, nothing semantic about this action -->
+
+<xen:form action="{xen:adminlink 'active-api-keys/rotate', $user}" class="deleteConfirmForm formOverlay">
+	<p>{xen:phrase xenforo_api_keys_admin_please_confirm_want_to_rotate_key_for}</p>
+	<strong><a href="{xen:adminlink 'users/edit', $user}">{$user.username}</a></strong>
+	
+	<p>{xen:phrase xenforo_api_keys_admin_this_action_will_break_applications}</p>
+
+	<xen:submitunit save="{xen:phrase xenforo_api_keys_admin_rotate_key}" />
+	<input type="hidden" name="_xfConfirm" value="1" />
+</xen:form>]]></template>
+  </admin_templates>
+  <admin_template_modifications/>
+  <code_events/>
+  <code_event_listeners>
+    <listener event_id="template_hook" execute_order="10" callback_class="XenforoApiKeys_Hooks_AccountWrapperSidebarSettings" callback_method="template_hook" active="1" hint="" description="Add user settings option for API Key management"/>
+  </code_event_listeners>
+  <cron/>
+  <email_templates/>
+  <email_template_modifications/>
+  <optiongroups/>
+  <permissions>
+    <permission_groups>
+      <permission_group permission_group_id="xenforo_api_keys"/>
+    </permission_groups>
     <permissions>
-        <permission_groups>
-            <permission_group permission_group_id="xenforo_api_keys"/>
-        </permission_groups>
-        <permissions>
-            <permission permission_group_id="xenforo_api_keys" permission_id="obtain_api_key" permission_type="flag" default_value="unset" interface_group_id="xenforo_api_keys" display_order="1"/>
-            <permission permission_group_id="xenforo_api_keys" permission_id="rotate_api_key" permission_type="flag" depend_permission_id="obtain_api_key" default_value="unset" interface_group_id="xenforo_api_keys" display_order="2"/>
-            <permission permission_group_id="xenforo_api_keys" permission_id="delete_api_key" permission_type="flag" depend_permission_id="obtain_api_key" default_value="unset" interface_group_id="xenforo_api_keys" display_order="3"/>
-        </permissions>
-        <interface_groups>
-            <interface_group interface_group_id="xenforo_api_keys" display_order="99999"/>
-        </interface_groups>
+      <permission permission_group_id="xenforo_api_keys" permission_id="delete_api_key" permission_type="flag" depend_permission_id="obtain_api_key" default_value="unset" interface_group_id="xenforo_api_keys" display_order="3"/>
+      <permission permission_group_id="xenforo_api_keys" permission_id="obtain_api_key" permission_type="flag" default_value="unset" interface_group_id="xenforo_api_keys" display_order="1"/>
+      <permission permission_group_id="xenforo_api_keys" permission_id="rotate_api_key" permission_type="flag" depend_permission_id="obtain_api_key" default_value="unset" interface_group_id="xenforo_api_keys" display_order="2"/>
     </permissions>
-    <phrases>
-        <!-- Custom Phrases -->
-        <phrase title="xenforo_api_keys_api_key" global_cache="0" version_id="1" version_string="0.0.1"><![CDATA[API Key]]></phrase>
-        <phrase title="xenforo_api_keys_you_have" global_cache="0" version_id="1" version_string="0.0.1"><![CDATA[You have an API Key:]]></phrase>
-        <phrase title="xenforo_api_keys_allowed_but_none" global_cache="0" version_id="1" version_string="0.0.1"><![CDATA[You are allowed to have an API key, but don't have one yet:]]></phrase>
-        <phrase title="xenforo_api_keys_not_allowed" global_cache="0" version_id="1" version_string="0.0.1"><![CDATA[You are not permitted to have an API key.]]></phrase>
-        <phrase title="xenforo_api_keys_details_description" global_cache="0" version_id="1" version_string="0.0.1"><![CDATA[An API Key lets you access certain parts of this website programmatically (i.e., using code.) If you aren't a programmer, this will not be useful for you.]]></phrase>
-        <phrase title="xenforo_api_keys_warning_destructive" global_cache="0" version_id="1" version_string="0.0.1"><![CDATA[<strong>Warning: This is a destructive action.</strong> Upon clicking, anything using your API Key <span class="text-style:underline">will break</span>. You will need to update your applications to use the new key. Proceed with caution.]]></phrase>
-        <phrase title="xenforo_api_keys_rotate_key_description" global_cache="0" version_id="1" version_string="0.0.1"><![CDATA[If you need to, you may rotate (change) your API Key:]]></phrase>
-        <phrase title="xenforo_api_keys_rotate_key_button" global_cache="0" version_id="1" version_string="0.0.1"><![CDATA[Invalidate My Current Key and Get a New One]]></phrase>
-        <phrase title="xenforo_api_keys_delete_key_description" global_cache="0" version_id="1" version_string="0.0.1"><![CDATA[If you need to, you may irreversably delete your API Key:]]></phrase>
-        <phrase title="xenforo_api_keys_delete_key_button" global_cache="0" version_id="1" version_string="0.0.1"><![CDATA[Delete my API Key]]></phrase>
-        <!-- System Phrases -->
-        <phrase title="permission_interface_xenforo_api_keys" global_cache="0" version_id="1" version_string="0.0.1"><![CDATA[Xenforo API Keys]]></phrase>
-        <phrase title="permission_group_xenforo_api_keys" global_cache="0" version_id="1" version_string="0.0.1"><![CDATA[Xenforo API Keys Permissions]]></phrase>
-        <phrase title="permission_xenforo_api_keys_obtain_api_key" global_cache="0" version_id="1" version_string="0.0.1"><![CDATA[Obtain API Key]]></phrase>
-        <phrase title="permission_xenforo_api_keys_rotate_api_key" global_cache="0" version_id="1" version_string="0.0.1"><![CDATA[Rotate API Key]]></phrase>
-        <phrase title="permission_xenforo_api_keys_delete_api_key" global_cache="0" version_id="1" version_string="0.0.1"><![CDATA[Delete API Key]]></phrase>
-    </phrases>
-    <route_prefixes>
-        <route_type type="public">
-            <prefix original_prefix="api-keys" class="XenforoApiKeys_Route_Prefix_Index" build_link="data_only"/>
-        </route_type>
-    </route_prefixes>
-    <style_properties/>
-    <templates>
-        <template title="account_api_key" version_id="1" version_string="0.0.1"><![CDATA[<xen:title>{xen:phrase xenforo_api_keys_api_key}</xen:title>
+    <interface_groups>
+      <interface_group interface_group_id="xenforo_api_keys" display_order="99999"/>
+    </interface_groups>
+  </permissions>
+  <phrases>
+    <phrase title="admin_navigation_api_keys" version_id="1" version_string="0.0.1"><![CDATA[API Keys]]></phrase>
+    <phrase title="admin_navigation_api_keys_active_keys" version_id="1" version_string="0.0.1"><![CDATA[Active API Keys]]></phrase>
+    <phrase title="admin_permission_manage_api_keys" version_id="1" version_string="0.0.1"><![CDATA[Manage API Keys]]></phrase>
+    <phrase title="permission_group_xenforo_api_keys" version_id="1" version_string="0.0.1"><![CDATA[Xenforo API Keys Permissions]]></phrase>
+    <phrase title="permission_interface_xenforo_api_keys" version_id="1" version_string="0.0.1"><![CDATA[Xenforo API Keys]]></phrase>
+    <phrase title="permission_xenforo_api_keys_delete_api_key" version_id="1" version_string="0.0.1"><![CDATA[Delete API Key]]></phrase>
+    <phrase title="permission_xenforo_api_keys_obtain_api_key" version_id="1" version_string="0.0.1"><![CDATA[Obtain API Key]]></phrase>
+    <phrase title="permission_xenforo_api_keys_rotate_api_key" version_id="1" version_string="0.0.1"><![CDATA[Rotate API Key]]></phrase>
+    <phrase title="xenforo_api_keys_active_api_keys" version_id="1" version_string="0.0.1"><![CDATA[Active API Keys]]></phrase>
+    <phrase title="xenforo_api_keys_admin_confirm_key_deletion_for" version_id="1" version_string="0.0.1"><![CDATA[Confirm Deletion of API Key for: ]]></phrase>
+    <phrase title="xenforo_api_keys_admin_confirm_key_rotation_for" version_id="1" version_string="0.0.1"><![CDATA[Confirm Rotation of API Key for: ]]></phrase>
+    <phrase title="xenforo_api_keys_admin_delete_key" version_id="1" version_string="0.0.1"><![CDATA[Delete Key]]></phrase>
+    <phrase title="xenforo_api_keys_admin_delete_key_for" version_id="1" version_string="0.0.1"><![CDATA[Delete API Key for ]]></phrase>
+    <phrase title="xenforo_api_keys_admin_please_confirm_want_to_delete_key_for" version_id="1" version_string="0.0.1"><![CDATA[Please confirm that you want to delete the API Key for the following user:]]></phrase>
+    <phrase title="xenforo_api_keys_admin_please_confirm_want_to_rotate_key_for" version_id="1" version_string="0.0.1"><![CDATA[Please confirm that you want to rotate the API Key for the following user:]]></phrase>
+    <phrase title="xenforo_api_keys_admin_rotate_key" version_id="1" version_string="0.0.1"><![CDATA[Rotate Key]]></phrase>
+    <phrase title="xenforo_api_keys_admin_rotate_key_for" version_id="1" version_string="0.0.1"><![CDATA[Rotate API Key for ]]></phrase>
+    <phrase title="xenforo_api_keys_admin_this_action_will_break_applications" version_id="1" version_string="0.0.1"><![CDATA[This will immediately break any applications the user has created using this API key.]]></phrase>
+    <phrase title="xenforo_api_keys_allowed_but_none" version_id="1" version_string="0.0.1"><![CDATA[You are allowed to have an API key, but don't have one yet:]]></phrase>
+    <phrase title="xenforo_api_keys_api_key" version_id="1" version_string="0.0.1"><![CDATA[API Key]]></phrase>
+    <phrase title="xenforo_api_keys_delete_key_button" version_id="1" version_string="0.0.1"><![CDATA[Delete my API Key]]></phrase>
+    <phrase title="xenforo_api_keys_delete_key_description" version_id="1" version_string="0.0.1"><![CDATA[If you need to, you may irreversably delete your API Key:]]></phrase>
+    <phrase title="xenforo_api_keys_details_description" version_id="1" version_string="0.0.1"><![CDATA[An API Key lets you access certain parts of this website programmatically (i.e., using code.) If you aren't a programmer, this will not be useful for you.]]></phrase>
+    <phrase title="xenforo_api_keys_not_allowed" version_id="1" version_string="0.0.1"><![CDATA[You are not permitted to have an API key.]]></phrase>
+    <phrase title="xenforo_api_keys_rotate_key_button" version_id="1" version_string="0.0.1"><![CDATA[Invalidate My Current Key and Get a New One]]></phrase>
+    <phrase title="xenforo_api_keys_rotate_key_description" version_id="1" version_string="0.0.1"><![CDATA[If you need to, you may rotate (change) your API Key:]]></phrase>
+    <phrase title="xenforo_api_keys_warning_destructive" version_id="1" version_string="0.0.1"><![CDATA[<strong>Warning: This is a destructive action.</strong> Upon clicking, anything using your API Key <span class="text-style:underline">will break</span>. You will need to update your applications to use the new key. Proceed with caution.]]></phrase>
+    <phrase title="xenforo_api_keys_you_have" version_id="1" version_string="0.0.1"><![CDATA[You have an API Key:]]></phrase>
+  </phrases>
+  <route_prefixes>
+    <route_type type="admin">
+      <prefix original_prefix="active-api-keys" class="XenforoApiKeys_Route_PrefixAdmin_ActiveApiKeys" build_link="data_only"/>
+    </route_type>
+    <route_type type="public">
+      <prefix original_prefix="api-keys" class="XenforoApiKeys_Route_Prefix_Index" build_link="data_only"/>
+    </route_type>
+  </route_prefixes>
+  <style_properties/>
+  <templates>
+    <template title="account_api_key" version_id="1" version_string="0.0.1"><![CDATA[<xen:title>{xen:phrase xenforo_api_keys_api_key}</xen:title>
 
 <xen:require css="account.css" />
 <xen:require css="xak.css" />
@@ -117,12 +219,12 @@
         </div>
     </div>
 </div>]]></template>
-        <template title="account_wrapper_sidebar_api_key" version_id="1" version_string="0.0.1"><![CDATA[<li>
+    <template title="account_wrapper_sidebar_api_key" version_id="1" version_string="0.0.1"><![CDATA[<li>
     <a class="{xen:if '{$selectedKey} == "account/api-keys"', 'secondaryContent', 'primaryContent'}" href="{xen:link api-keys/index}">
         {xen:phrase xenforo_api_keys_api_key}
     </a>
 </li>]]></template>
-        <template title="xak.css" version_id="1" version_string="0.0.1"><![CDATA[.xak_key_details {
+    <template title="xak.css" version_id="1" version_string="0.0.1"><![CDATA[.xak_key_details {
     display: flex;
     justify-content: center;
 }
@@ -148,5 +250,8 @@
 .xak_key_details .xak_key_control {
     padding: 15px 0 15px 0;
 }]]></template>
-    </templates>
+  </templates>
+  <public_template_modifications/>
+  <bb_code_media_sites/>
+  <bb_codes/>
 </addon>
